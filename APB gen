@@ -1,0 +1,27 @@
+//Generator class
+
+class apb_gen;
+	apb_tx tx_g;
+	apb_tx txQ[$];
+
+	task run();
+		$display("GEN: run_task");
+      tx_g=new();
+      for(int i=0;i<num_tx;i++)begin
+        
+        assert(tx_g.randomize() with {WRITE_i==1;});
+        tx_g.print("GEN Printing");
+        gen2drv.put(tx_g);
+        txQ[i]=new tx_g;
+		end
+       tx_g=new();
+      for(int i=0;i<num_tx;i++)begin
+       
+	    tx_g.WRITE_i=0;
+        tx_g.ADDR_i=txQ[i].ADDR_i;
+        tx_g.print("GEN Printing");
+        gen2drv.put(tx_g);
+		end
+	endtask
+	
+endclass
