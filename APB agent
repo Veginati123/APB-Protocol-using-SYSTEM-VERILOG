@@ -1,0 +1,29 @@
+//Agent class
+
+class apb_agent;
+  apb_gen gen;
+  apb_drv drv;
+  apb_mon mon;
+  apb_reference refer;
+  apb_scb scb;
+
+  function new();
+	gen=new();
+ 	drv=new();
+    mon=new();
+    refer=new();
+    scb=new();
+  endfunction
+
+  task run();
+		$display("AGENT: run_task");	
+    fork
+		gen.run();
+		//drv.run();
+        //mon.run();
+       //refer.run();
+      //scb.run();
+      
+    join
+  endtask
+endclass
