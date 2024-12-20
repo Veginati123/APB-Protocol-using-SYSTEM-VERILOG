@@ -1,0 +1,26 @@
+// Environment class
+
+class apb_env;
+  
+apb_agent agent;
+//apb_scb scb;
+//apb_reference refer;
+
+  function new();
+  agent=new();
+  //refer=new();
+  //  scb=new();
+endfunction
+  
+task run();
+  
+  $display("ENV: run_task");
+  fork
+    agent.run();
+    //scb.run();
+    //refer.run();
+  join
+  
+endtask
+
+endclass
