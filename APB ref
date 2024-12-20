@@ -1,0 +1,89 @@
+//Coverage class
+
+class apb_reference;
+  bit ref_sel;
+  bit ref_enable;
+  bit [31:0] ref_addr;
+  bit [31:0] ref_wdata;
+  bit [31:0] ref_rdata;
+  bit ref_write;
+  bit ref_ready;
+  bit ref_slverr;
+  
+  bit [31:0] ref_mem[int]; 
+  
+  apb_tx tx;
+  apb_tx tx_ref;
+  
+  function new();
+    tx=new();
+    tx_ref=new();
+  endfunction
+
+  task run();
+    forever begin
+     
+    mon2ref.get(tx);
+    tx.print("REF printing");
+      reference_logic(tx);
+      ref2scb.put(tx_ref);
+   
+  end
+  endtask
+    
+    task reference_logic(apb_tx tx);
+      if(top.rst_i==1 && tx.ENABLE_i==1 && tx.SEL_i==1)begin
+        ref_ready=1'b1;
+        if(tx.WRITE_i==1)begin
+          case(tx.ADDR_i)
+            32'h0:begin ref_mem[tx.ADDR_i]=tx.DATA_i; ref_slverr=0; end
+            32'h04:begin ref_mem[tx.ADDR_i]=tx.DATA_i; ref_slverr=0; end
+            32'h08:begin ref_mem[tx.ADDR_i]=tx.DATA_i; ref_slverr=0; end
+            32'h0c:begin ref_mem[tx.ADDR_i]=tx.DATA_i; ref_slverr=0; end
+            32'h10:begin ref_mem[tx.ADDR_i]=tx.DATA_i; ref_slverr=0; end
+            32'h14:begin ref_mem[tx.ADDR_i]=tx.DATA_i; ref_slverr=0; end
+            32'h1_0000:begin ref_mem[tx.ADDR_i]=tx.DATA_i; ref_slverr=0; end
+            32'h1_0004:begin ref_mem[tx.ADDR_i]=tx.DATA_i; ref_slverr=0; end
+            32'h1_0008:begin ref_mem[tx.ADDR_i]=tx.DATA_i; ref_slverr=0; end
+            32'h1_000c:begin ref_mem[tx.ADDR_i]=tx.DATA_i; ref_slverr=0; end
+            32'h1_0010:begin ref_mem[tx.ADDR_i]=tx.DATA_i; ref_slverr=0; end
+            32'h1_0014:begin ref_mem[tx.ADDR_i]=tx.DATA_i; ref_slverr=0; end
+            default: begin ref_mem[tx.ADDR_i]=32'h0; ref_slverr=1; end            
+            
+          endcase
+        end
+        
+        if(tx.WRITE_i==0)begin
+          ref_ready=1'b1;
+          case(tx.ADDR_i)
+            
+            32'h0:begin ref_rdata=ref_mem[tx.ADDR_i] ;ref_slverr=0; end
+            32'h04:begin ref_rdata=ref_mem[tx.ADDR_i]; ref_slverr=0; end
+            32'h08:begin ref_rdata=ref_mem[tx.ADDR_i]; ref_slverr=0; end
+            32'h0c:begin ref_rdata=ref_mem[tx.ADDR_i]; ref_slverr=0; end
+            32'h10:begin ref_rdata=ref_mem[tx.ADDR_i];ref_slverr=0; end
+            32'h14:begin ref_rdata=ref_mem[tx.ADDR_i]; ref_slverr=0; end
+            32'h1_0000:begin ref_rdata=ref_mem[tx.ADDR_i]; ref_slverr=0; end
+            32'h1_0004:begin ref_rdata=ref_mem[tx.ADDR_i]; ref_slverr=0; end
+            32'h1_0008:begin ref_rdata=ref_mem[tx.ADDR_i]; ref_slverr=0; end
+            32'h1_000c:begin ref_rdata=ref_mem[tx.ADDR_i]; ref_slverr=0; end
+            32'h1_0010:begin ref_rdata=ref_mem[tx.ADDR_i]; ref_slverr=0; end
+            32'h1_0014:begin ref_rdata=ref_mem[tx.ADDR_i]; ref_slverr=0; end
+            default: begin ref_rdata=32'h0; ref_slverr=1; end
+            
+            
+          endcase
+          $display("ref_rdata=%0h,ref_ready=%0b,ref_slverr=%0b",ref_rdata,ref_ready,ref_slverr);
+          tx_ref.RDATA=ref_rdata;
+          tx_ref.SLVERR=ref_slverr;
+          tx_ref.READY=ref_ready;
+          
+        end
+        $display("ref_mem=%0p",ref_mem);
+        
+      end
+  endtask
+  
+  
+  
+endclass
