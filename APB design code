@@ -1,0 +1,210 @@
+module apb_reg_decoder(
+
+  //system signals
+  //input clk, rst_n;
+
+  //APB clk/rst
+  input pclk, resetn,
+
+  //APB i/p signals
+  input [31:0] paddr,
+  input psel,
+  input pen,
+  input pwrite,
+  input [31:0] pwdata,
+  
+ 
+  //APB o/p signals
+  output reg pready,
+  output reg pslverr,
+  output reg [31:0] prdata);
+
+  reg [31:0] ctrl0;
+  reg [31:0] ctrl1;
+  reg [31:0] ctrl2;
+  reg [31:0] ctrl3;
+  reg [31:0] ctrl4;
+  reg [31:0] ctrl5;
+  wire [15:0] padddr;
+
+  //PReady logic
+  always @(posedge pclk) begin
+    if(pen) begin
+      pready <= 1'b1;
+    end
+    else begin
+      pready <=1'b0;
+    end
+  end 
+  assign padddr = paddr;
+  always @(posedge pclk or negedge resetn) begin
+    if(!resetn) begin
+      ctrl0 <= 32'h0;
+      ctrl1 <= 32'h10;
+      ctrl2 <= 32'h20;
+      ctrl3 <= 32'h40;
+      //ctrl4 <= 32'h50; un-initialized
+      ctrl5 <= 32'h0;
+      pslverr <= 1'b0;
+    end
+    case(padddr) 
+      'h00 : begin
+             pslverr <= 1'b0;
+             if(pwrite & psel & pen) begin
+               ctrl0 <= pwdata;
+             end
+             if(!pwrite & psel & pen) begin
+               prdata <= ctrl0;
+             end 
+             end
+      'h04 : begin 
+             pslverr <= 1'b0;
+             if(pwrite & psel & pen) begin
+               pslverr <= 1'b1;//RO access
+             end
+             if(!pwrite & psel & pen) begin
+               prdata <= ctrl1;
+             end
+             end
+      'h08 : begin 
+             pslverr <= 1'b0;
+             if(pwrite & psel & pen) begin
+               ctrl2 <= pwdata;
+             end
+             if(!pwrite & psel & pen) begin
+               prdata <= ctrl2;
+             end
+             end 
+      'h0C : begin 
+             pslverr <= 1'b0;
+             if(pwrite & psel & pen) begin
+               ctrl3 <= pwdata;
+             end
+             if(!pwrite & psel & pen) begin
+               pslverr <= 1'b1;//WO access
+             end
+             end
+      'h10 : begin 
+              pslverr <= 1'b0;
+              if(pwrite & psel & pen) begin
+               ctrl4 <= pwdata;
+             end
+             if(!pwrite & psel & pen) begin
+               prdata <= ctrl4;
+             end
+             end 
+      'h14 : begin 
+             pslverr <= 1'b0;
+             if(pwrite & psel & pen) begin
+               ctrl5 <= pwdata;
+             end
+             if(!pwrite & psel & pen) begin
+               prdata <= ctrl5;
+             end
+             end
+      default: begin 
+              if(psel & pen) begin
+                 pslverr <= 1'b1;
+                 prdata <= 'hx;
+              end
+               end
+    endcase
+  end
+endmodule
+               
+    
+module apb_reg_top(
+
+  //system signals
+  //input clk, rst_n;
+
+  //APB clk/rst
+  input pclk, resetn,
+
+  //APB i/p signals
+  input [31:0] paddr,
+  input psel,
+  input pen,
+  input pwrite,
+  input [31:0] pwdata,
+ 
+  //APB o/p signals
+  output reg pready,
+  output reg pslverr,
+  output reg [31:0] prdata);
+
+  reg [31:0] prdata_from_base_addr_0;
+  reg [31:0] prdata_from_base_addr_1;
+  reg pslverr_from_base_addr_0;
+  reg pslverr_from_base_addr_1;
+  reg pready_from_base_addr_0;
+  reg pready_from_base_addr_1;
+  
+  reg [31:0] pwdata_from_base_addr_0;
+  reg [31:0] pwdata_from_base_addr_1;
+  reg psel_from_base_addr_0;
+  reg psel_from_base_addr_1;
+  reg penable_from_base_addr_0;
+  reg penable_from_base_addr_1;
+  reg pwrite_from_base_addr_0;
+  reg pwrite_from_base_addr_1;
+  
+  always @(posedge pclk) begin
+    if(paddr[31:16] == 'h0) begin
+      prdata = prdata_from_base_addr_0;
+      pslverr = pslverr_from_base_addr_0;
+      pready = pready_from_base_addr_0;
+      pwdata_from_base_addr_0 = pwdata;
+      psel_from_base_addr_0 = psel;
+      penable_from_base_addr_0 = pen;
+      pwrite_from_base_addr_0 = pwrite;
+      //
+      pwdata_from_base_addr_1 = 0;
+      psel_from_base_addr_1=0;
+      penable_from_base_addr_1=0;
+      pwrite_from_base_addr_1=0;
+      
+      
+    end 
+    else begin
+      prdata = prdata_from_base_addr_1;
+      pslverr = pslverr_from_base_addr_1;
+      pready = pready_from_base_addr_1;
+      pwdata_from_base_addr_1 = pwdata;
+      psel_from_base_addr_1 = psel;
+      penable_from_base_addr_1 = pen;
+      pwrite_from_base_addr_1 = pwrite;
+      //
+      pwdata_from_base_addr_0=0;
+      psel_from_base_addr_0 = 0;
+      penable_from_base_addr_0 = 0;
+      pwrite_from_base_addr_0 = 0;
+      
+    end 
+  end 
+  
+ apb_reg_decoder u_apb_reg_dec_base_addr_low(.pclk(pclk),
+                               .resetn(resetn),
+                                             .paddr({16'h0000,paddr[15:0]}),
+                               .psel(psel_from_base_addr_0),
+                               .pen(penable_from_base_addr_0),
+                               .pready(pready_from_base_addr_0),
+                               .pwrite(pwrite_from_base_addr_0),
+                               .pwdata(pwdata_from_base_addr_0),
+                               .prdata(prdata_from_base_addr_0),
+                               .pslverr(pslverr_from_base_addr_0)
+                              );
+
+  
+   apb_reg_decoder u_apb_reg_dec_base_addr_high(.pclk(pclk),
+                               .resetn(resetn),
+                                                   .paddr({16'h0001,paddr[15:0]}),
+                                                .psel(psel_from_base_addr_1),
+                                                .pen(penable_from_base_addr_1),
+                                                .pready(pready_from_base_addr_1),
+                                                .pwrite(pwrite_from_base_addr_1),
+                                                .pwdata(pwdata_from_base_addr_1),
+                                                .prdata(prdata_from_base_addr_1),
+                                                .pslverr(pslverr_from_base_addr_1)
+                              );
+endmodule
