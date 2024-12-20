@@ -1,0 +1,71 @@
+//Driver class
+class apb_drv;
+  apb_tx tx_d=new();
+  virtual apb_intf vif_drv;
+  
+  function new();
+    tx_d=new();
+    vif_drv=top.pif;
+  endfunction
+	task run();
+      $display("DRV: run_task");
+      if(vif_drv==null)
+        $error("vif_drv not allocated");
+      else
+        $display("vif_drv memory allocated");
+      begin
+        
+         forever begin
+           
+           if(total_drive_tx<(2*num_tx))begin
+             gen2drv.get(tx_d);
+            // tx_d.print("DRV printing");
+             drive(tx_d);
+             total_drive_tx++;
+             $display("total_drive_tx=%0d",total_drive_tx);
+           end
+           if(total_drive_tx>=(2*num_tx))begin
+              @(vif_drv.drv_cb);
+              vif_drv.drv_cb.psel<=0;
+              vif_drv.drv_cb.penable<=0;
+           end
+         end
+      end
+        
+    endtask
+      
+    task drive(apb_tx tx_d);
+    
+      @(vif_drv.drv_cb);
+      //Setup phase
+      vif_drv.drv_cb.psel<=1;
+      vif_drv.drv_cb.penable<=0;
+      vif_drv.drv_cb.paddr<=tx_d.ADDR_i;
+      vif_drv.drv_cb.pwrite<=tx_d.WRITE_i;
+      
+      //Write
+      if(tx_d.WRITE_i==1)
+        begin        
+           vif_drv.drv_cb.pwdata<=tx_d.DATA_i;
+          $display("DRV:paddr=%0h,pwdata=%0h",tx_d.ADDR_i,tx_d.DATA_i);
+        end
+      
+      //Read
+      if(tx_d.WRITE_i==0)
+        begin
+         tx_d.DATA_i<=vif_drv.drv_cb.prdata;
+          $display("DRV:paddr=%0h,prdata=%0h",tx_d.ADDR_i,tx_d.DATA_i);
+        end
+      
+      
+      @(vif_drv.drv_cb);
+      //Access phase
+      vif_drv.drv_cb.penable<=1;    
+      
+     wait(vif_drv.drv_cb.pready==1);
+          
+    // $display("Pready recieved");
+          
+  
+    endtask
+endclass
