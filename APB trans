@@ -1,0 +1,44 @@
+//Transaction class
+
+class apb_tx;
+	randc bit [31:0] ADDR_i;
+	randc bit [31:0] DATA_i;
+	rand bit WRITE_i;
+    bit ENABLE_i;
+    bit SEL_i;
+    bit READY;
+  bit SLVERR;
+  bit [31:0] RDATA;
+
+	function void print(string name ="Tx Printing");
+        $display("#####%0s#####",name);
+      $display("SEL=%0b",SEL_i);
+      $display("ENABLE=%0b",ENABLE_i);
+		$display("ADDR=%0h",ADDR_i);
+		$display("DATA=%0h",DATA_i);
+		$display("WRITE_i=%0s",WRITE_i?"WRITE":"READ");
+	endfunction
+
+	constraint ADDR_c{
+      ADDR_i inside {32'h0,
+                     32'h04,
+                     32'h08,
+                     32'h0c,
+                     32'h10,
+                     32'h14,
+                     32'h1_0000,
+                     32'h1_0004,
+                     32'h1_0008,
+                     32'h1_000c,
+                     32'h1_0010,
+                     32'h1_0014};
+	}
+  
+  /*constraint ADDR_c{ ADDR_i<= 32'h14;
+  ADDR_i==ADDR_i+32'h 04;
+  
+  }*/
+	constraint DATA_c{
+		DATA_i inside {[10:200]};
+	}
+endclass
