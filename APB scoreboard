@@ -1,0 +1,34 @@
+//Scoreboard class
+class apb_scb;
+  apb_tx tx_mon;
+  apb_tx tx_ref;
+  
+  task run();
+   
+    $display("SCB:run task");
+    forever begin
+    mon2scb.get(tx_mon);
+    ref2scb.get(tx_ref);
+    scb_check(tx_mon,tx_ref);
+    end
+    
+  endtask
+  
+  task scb_check(apb_tx tx_mon,tx_ref);
+    if(top.rst_i && tx_mon.ENABLE_i && tx_mon.SEL_i&&tx_mon.WRITE_i==0)begin
+      if(tx_mon.RDATA==tx_ref.RDATA)begin
+        $display("SCB:PASS for ADDR=%0h",tx_mon.ADDR_i);
+        $display("mon_RDATA=%0h,ref_RDATA=%0h",tx_mon.RDATA,tx_ref.RDATA);
+      end
+      else begin
+        $display("mon_RDATA=%0h,ref_RDATA=%0h",tx_mon.RDATA,tx_ref.RDATA);
+        $display("SCB:FAIL for ADDR=%0h",tx_mon.ADDR_i);
+      end
+        
+      
+    end
+    
+  endtask
+  
+  
+endclass
