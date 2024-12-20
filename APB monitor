@@ -1,0 +1,48 @@
+// Monitor class
+
+class apb_mon;
+  apb_tx tx;
+  virtual apb_intf mon_vif;
+  
+  function new();
+    tx=new();
+    mon_vif=top.pif;
+  endfunction
+  
+  task run();
+    $display("MON:run_task");
+    if(mon_vif==null)
+      $error("mon_vif not allocated");
+    else
+      begin
+        $display("mon_vif memory allocated");
+        forever begin
+          @(mon_vif.mon_cb);
+          if(mon_vif.mon_cb.penable==1 && mon_vif.mon_cb.pready==1)
+             begin
+               tx.SEL_i=mon_vif.mon_cb.psel;
+               tx.ENABLE_i=mon_vif.mon_cb.penable;
+               tx.ADDR_i=mon_vif.mon_cb.paddr;
+          	   tx.WRITE_i=mon_vif.mon_cb.pwrite;
+           
+              if(mon_vif.mon_cb.pwrite==1)
+                begin                       	    
+                 tx.DATA_i=mon_vif.mon_cb.pwdata;
+                 mon2ref.put(tx);
+                   //mon2scb.put(tx);
+                 //tx.print("MON printing");
+                
+                end
+              if(mon_vif.mon_cb.pwrite==0)
+                begin                 	     
+                  tx.RDATA=mon_vif.mon_cb.prdata;
+                  mon2ref.put(tx);
+                   mon2scb.put(tx);
+                // tx.print("MON printing");
+                end
+          
+            end
+         end
+      end
+  endtask
+endclass
