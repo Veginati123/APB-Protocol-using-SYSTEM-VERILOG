@@ -1,0 +1,65 @@
+mailbox  gen2drv=new();
+mailbox mon2scb=new();
+mailbox mon2ref=new();
+mailbox ref2scb=new();
+string testname;
+int num_tx;
+int total_drive_tx=0;
+
+
+`include "apb_intf.sv"
+`include "apb_tx.sv"
+`include "apb_gen.sv"
+`include "apb_drv.sv"
+`include "apb_mon.sv"
+`include "apb_reference.sv"
+`include "apb_scb.sv"
+`include "apb_agent.sv"
+
+`include "apb_env.sv"
+
+//Top module
+module top;
+bit clk_i,rst_i;
+apb_env env;
+//Interface Instantiation
+apb_intf pif(clk_i,rst_i);
+
+//DUT connect
+    apb_reg_top DUT(.pclk(pif.pclk),.resetn(pif.prst),.pen(pif.penable),.psel(pif.psel),.paddr(pif.paddr),.pwrite(pif.pwrite),.pwdata(pif.pwdata),.pready(pif.pready),.pslverr(pif.pslverr),.prdata(pif.prdata));
+
+
+//Clk generation
+
+initial begin
+  forever begin
+		clk_i=1'b1;
+		#5;
+		clk_i=1'b0;
+	   #5;
+   end
+end
+//Reset generation
+initial begin
+		 rst_i=1'b0;
+  repeat(1) @(posedge clk_i);
+		 rst_i=1'b1;
+		// $value$plusargs("testcase=%0s",testcase);
+		$value$plusargs("num_tx=%0d",num_tx);
+      env=new();
+	  env.run();
+
+end
+
+
+
+initial 
+ begin
+	$dumpfile("dump.vcd");
+   $dumpvars();		
+ 	#1000;
+	$finish;
+ end
+
+endmodule
+
