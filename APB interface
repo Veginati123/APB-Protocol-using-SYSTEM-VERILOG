@@ -1,0 +1,34 @@
+interface apb_intf(input bit pclk,prst);
+  
+  bit psel;
+  bit penable;
+  bit [31:0] paddr;
+  bit [31:0] pwdata;
+  bit [31:0] prdata;
+  bit pwrite;
+  bit pready;
+  bit pslverr;
+  
+  clocking drv_cb @(posedge pclk);
+    output #1 psel;
+    output #1 penable;
+    output #1  paddr;
+  	output #1  pwdata; 	
+  	output #1 pwrite;
+  	input #0 pready;
+    input #0  prdata;
+  	input #0 pslverr;
+  endclocking
+  
+   clocking mon_cb @(posedge pclk);
+    input #1 psel;
+    input #1 penable;
+    input #1  paddr;
+  	input #1  pwdata;
+  	input #1 pwrite;
+    input  #0  prdata;
+  	input #0 pready;
+  	input #0 pslverr;
+  endclocking
+  
+endinterface
